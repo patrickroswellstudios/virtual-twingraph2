@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="viewport" content="user-scalable=yes, width=device-width, initial-scale=0.94, maximum-scale=4.0, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+        <title>Hello World</title>
+    </head>
+    <body>
+			<div  style="left:0px;top:0px;width: 340px; height:340px;">
+				<img src="bgrnd.jpg" width="340" height="340" style="position: absolute;left:0px;top:0px;float: left;">
+				<canvas id="clock" width="340" height="340" style="position: absolute;left:0px;top:0px;float: left;"></canvas>
+			</div>
+			<script type="text/javascript" >
+
+				/*
+				 Recreate my Casio Twin Graph II using the HTML5 Canvas, after I thought I had lost it.
+
+				 As an experimental, artistic project, this is not the best documented or laid out project.
+
+				 http://fantod.x10.bz/2009.html
+				 http://www.williammalone.com/articles/html5-canvas-example
+				 https://developer.mozilla.org/en/Canvas_tutorial/Basic_usage
+				 http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#compositing
+				 */
+
+				drawtime();
+
+				function drawtime() {
+					var ctx = document.getElementById("clock").getContext("2d");
+					/*
+					 var img=new Image();
+					 img.onload=function(){
+					 ctx.drawImage(img,0,0);
+
+					 drawtimesecs(ctx, i);//is still drawing the image on top
+					 drawtimehands(ctx, 5, i);
+					 };
+					 img.src='bgrnd.jpg';
+					 */
+					var today = new Date();
+
+					drawtimesecs(ctx, today.getSeconds());
+					drawtimehands(ctx, today.getHours()% 12, today.getMinutes());
+					var hours = today.getHours();
+					drawampm(ctx, hours >= 12 && hours < 24);
+					if (hours > 12) {
+						hours = hours - 12;
+					}
+					drawTime(ctx, hours, today.getMinutes(), today.getSeconds());
+					drawDate(ctx, today.getMonth()+1, today.getDate());//Month is base 0
+
+					setTimeout('drawtime();', 1000);
+				}
+
+				function drawtimehands(ctx, hours, min) {
+					ctx.beginPath();
+					ctx.fillStyle = ctx.strokeStyle = "#e9e6df";
+					ctx.arc(109, 122, 42,  0, Math.PI*2, true);
+					ctx.fill();
+					ctx.closePath();
+
+
+					analogLineDraw(ctx, (hours * 5 + min / 12), 109, 122, 29, 10);
+
+					analogLineDraw(ctx, min, 109, 122, 29, 10);
+					analogLineDraw(ctx, min, 109, 122, 42, 31);
+
+					//art notes: the hands extend in farther than over on the second side, but don't touch the central art.
+					//there is a small gap for the minute hand, too
+
+
+					ctx.beginPath();
+					ctx.fillStyle = ctx.strokeStyle = "#000000";
+					ctx.arc(109, 122, 6,  0, Math.PI*2, true);
+					ctx.fill();
+					ctx.closePath();
+					ctx.shadowBlur = 0;
+					ctx.beginPath();
+					ctx.moveTo(68, 122);
+					ctx.lineTo(154, 122);
+					ctx.moveTo(68, 108);
+					ctx.lineTo(154, 108);
+					ctx.moveTo(80, 94);
+					ctx.lineTo(138, 94);
+					ctx.moveTo(68, 136);
+					ctx.lineTo(154, 136);
+					ctx.moveTo(80, 150);
+					ctx.lineTo(138, 150);
+					ctx.moveTo(80, 92);
+					ctx.lineTo(80, 154);
+					ctx.moveTo(94, 80);
+					ctx.lineTo(94, 168);
+					ctx.moveTo(108, 80);
+					ctx.lineTo(108, 168);
+					ctx.moveTo(123, 80);
+					ctx.lineTo(123, 168);
+					ctx.moveTo(138, 90);
+					ctx.lineTo(138, 154);
+					ctx.stroke();
+					ctx.closePath();
+				}
+
+				function drawtimesecs(ctx,  secs) {
+					ctx.save();
+					ctx.beginPath();
+					ctx.fillStyle = ctx.strokeStyle = "#e9e6df";
+					ctx.arc(234, 122, 42,  0, Math.PI*2, true);
+					ctx.fill();
+					ctx.closePath();
+
+					for (var x = 0; x < secs; x++) {
+						analogLineDraw(ctx, x, 234, 122, 42, 15);
+					}
+
+					//second center point: 234 122
+					//start point 234 81
+
+					//The bit in the  center, which could also be done as an image
+					ctx.beginPath();
+					ctx.fillStyle = ctx.strokeStyle = "#000000";
+					ctx.arc(234, 122, 15-1,  0, Math.PI*2, true);
+					ctx.fill();
+					ctx.closePath();
+					ctx.beginPath();
+					ctx.fillStyle = ctx.strokeStyle = "#FFFFFF";
+					//ctx.font = "20px sans-serif";
+					ctx.textAlign = "center";
+					ctx.textBaseline = "middle";
+					ctx.fillText("SEC", 234, 122);
+					ctx.fill();
+					ctx.closePath();
+
+					ctx.restore();
+				}
+
+				function analogLineDraw(ctx, sec, xcenter, ycenter, radius, radialOffset) {
+					var rad = 0;
+					var sin = 0;
+					var cos = 0;
+					var tick = 0;
+
+					ctx.fillStyle = ctx.strokeStyle = "#41647a";
+					ctx.shadowBlur = 1;//The blur on this extends out beyond the edge of the reset area.
+
+					tick = (sec*2) + Math.floor(sec / 10);
+					rad = (tick / 124) * (Math.PI * 2);
+					cos = Math.cos(rad);
+					sin = Math.sin(rad);
+					ctx.beginPath();
+					ctx.moveTo(xcenter + (radialOffset * sin), ycenter - (radialOffset * cos));
+					ctx.lineTo(
+										 xcenter + (radius * sin),
+										 ycenter - (radius * cos)
+										 );
+					rad = ((tick+1) / 124) * (Math.PI * 2);
+					cos = Math.cos(rad);
+					sin = Math.sin(rad);
+					ctx.lineTo(
+										 xcenter + (radius * sin),
+										 ycenter - (radius * cos)
+										 );
+					ctx.lineTo(xcenter + (radialOffset * sin), ycenter - (radialOffset * cos));
+					//art: without that lineTo, it is too narrow. Even with it, it still looks too narrow, though I'm not sure if that is just the anti-alias/JPEG compression. I added the shadow blur to address this, but I'm not sure that it makes it look like the picture, or like how it actually is.
+					ctx.fill();
+					ctx.closePath();
+				}
+
+				function drawTime(ctx, hour, minute, second) {
+
+					if (hour >= 10) {
+						drawDigit(ctx, Math.floor(hour / 10), 85, 227);
+					}
+					drawDigit(ctx, hour % 10, 115, 227);
+					drawDigit(ctx, Math.floor(minute / 10), 170, 227);
+					drawDigit(ctx, minute % 10, 200, 227);
+
+					drawDigit(ctx, Math.floor(second / 10), 235, 235, true);
+					drawDigit(ctx, second % 10, 259, 235, true);
+
+				}
+
+				function drawDate(ctx, month, day) {
+					if (month >= 10) {
+						drawDigit(ctx, Math.floor(month / 10), 200, 193, false, true);
+					}
+					drawDigit(ctx, month % 10, 215, 193, false, true);
+					drawDigit(ctx, '-', 229, 193, false, true);
+					drawDigit(ctx, Math.floor(day / 10), 243, 193, false, true);
+					drawDigit(ctx, day % 10, 260, 193, false, true);
+				}
+
+				function drawDigit(ctx, digit, topleftx, toplefty, second, date) {
+					ctx.save();
+					ctx.translate(topleftx, toplefty);
+
+					if (second) {
+						ctx.scale(0.75,0.75);
+					}
+					if (date) {
+						ctx.scale(0.5, 0.5);
+					}
+					ctx.fillStyle = ctx.strokeStyle = "#e9e6df";
+					ctx.fillRect( 0, 0, 26, 40);
+					ctx.beginPath();
+					ctx.fillStyle = ctx.strokeStyle = "#41647a";
+					if (digit == 2 || digit == 3 || digit == 5 || digit  == 6 || digit == 7 || digit == 8 || digit == 9 || digit == 0) {
+						//top bar
+						ctx.moveTo(3,0);
+						ctx.lineTo(22,0);
+						ctx.lineTo(18,5);
+						ctx.lineTo(8,5);
+						ctx.lineTo(3,0);
+					}
+					if (digit == 4 || digit == 5 || digit  == 6 || digit == 8 || digit == 9 || digit == 0) {
+						//top left
+						ctx.moveTo(2,2);
+						ctx.lineTo(1,16);
+						ctx.lineTo(2,17);
+						ctx.lineTo(6,14);
+						ctx.lineTo(7,7);
+						ctx.lineTo(2,2);
+					}
+					if (digit == 1 || digit == 2 || digit == 3 || digit == 4 || digit == 7 || digit == 8 || digit == 9 || digit == 0) {
+						//top right
+						ctx.moveTo(24,1);
+						ctx.lineTo(20,7);
+						ctx.lineTo(20,15);
+						ctx.lineTo(23,17);
+						ctx.lineTo(24,17);
+						ctx.lineTo(25,15);
+						ctx.lineTo(26,3);
+						ctx.lineTo(24,1);
+					}
+					if (!second && (digit == 2 || digit == 3 || digit == 4 || digit == 5 || digit  == 6 || digit == 8 || digit == 9)) {
+						//center
+						ctx.moveTo(4,19);
+						ctx.lineTo(6,17);
+						ctx.lineTo(19,17);
+						ctx.lineTo(21,19);
+						ctx.lineTo(18,21);
+						ctx.lineTo(7,21);
+						ctx.lineTo(4,19);
+					}
+					if (second && (digit == 2 || digit == 3 || digit == 4 || digit == 5 || digit  == 6 || digit == 8 || digit == 9)) {
+						//center
+						ctx.moveTo(4,19);
+						ctx.lineTo(6,17);
+						ctx.lineTo(10,17);
+						ctx.lineTo(13,19);
+						ctx.lineTo(16,17);
+						ctx.lineTo(19,17);
+						ctx.lineTo(21,19);
+						ctx.lineTo(18,21);
+						ctx.lineTo(16,21);
+						ctx.lineTo(13,19);
+						ctx.lineTo(10,21);
+						ctx.lineTo(7,21);
+						ctx.lineTo(4,19);
+					}
+					if (digit == '-') {
+						//center
+						ctx.moveTo(6,17);
+						ctx.lineTo(19,17);
+						ctx.lineTo(19,21);
+						ctx.lineTo(6,21);
+
+					}
+					if (digit == 2 || digit  == 6 || digit == 8 || digit == 0) {
+						//bot left
+						ctx.moveTo(1,20);
+						ctx.lineTo(0,35);
+						ctx.lineTo(1,35);
+						ctx.lineTo(5,32);
+						ctx.lineTo(6,23);
+						ctx.lineTo(2,20);
+						ctx.lineTo(1,20);
+					}
+					if (digit == 1 || digit == 3 || digit == 4 || digit == 5 || digit == 6 || digit == 7 || digit == 8 || digit == 9 || digit == 0) {
+						//bot right
+						ctx.moveTo(23,20);
+						ctx.lineTo(19,24);
+						ctx.lineTo(19,30);
+						ctx.lineTo(18.5,32);
+						ctx.lineTo(22,37);
+						ctx.lineTo(23,38);
+						ctx.lineTo(25,22);
+						ctx.lineTo(23,20);
+					}
+					if (digit == 2 || digit == 3 || digit == 5 || digit == 6 || digit == 8 || digit == 0) {
+						//bot
+						ctx.moveTo(6,34);
+						ctx.lineTo(1,38);
+						ctx.lineTo(6,39);
+						ctx.lineTo(20,39);
+						ctx.lineTo(16,34);
+						ctx.lineTo(6,34);
+					}
+
+					//TODO: art, cleanup. Also, perhaps not entirely adequate. I think they are more complex shapes, Re-examine the art, google again for higher resolution.
+
+					ctx.fill();
+					ctx.restore();
+				}
+
+				function drawampm(ctx, pm) {
+					ctx.beginPath();
+					ctx.fillStyle = ctx.strokeStyle = "#375650";
+					//ctx.font = "20px sans-serif";
+					//ctx.textAlign = "center";
+					//ctx.textBaseline = "middle";
+					if (pm) {
+						ctx.fillText("P", 70, 235);
+					} else {
+						ctx.fillText("A", 70, 260);
+					}
+					ctx.fill();
+					ctx.closePath();
+				}
+
+				</script>
+    </body>
+</html>
